@@ -51,7 +51,7 @@
                     <td><strong><big>{{ label.description }}</big></strong></td>
                 {% else %}
                     {% if 'url' in label %}
-                        <td><a href="{{ label.url }}">{{ label.language }}</a></td>
+                        <td><a href="{{ label.url }}" target="_blank">{{ label.language }}</a></td>
                     {% else %}
                         <td>{{ label.language }}</td>
                     {% endif %}
