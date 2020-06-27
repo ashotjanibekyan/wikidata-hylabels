@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}">
+</head>
+<body>
+<div class="topnav">
+    {% if username %}
+        <a href="https://www.wikidata.org/wiki/User:{{ username }}" target="_blank">{{ username }}</a>
+        <a href="https://www.wikidata.org/wiki/Special:Contributions/{{ username }}" target="_blank">Ներդրումներ</a>
+        <a href="{{ url_for('logout') }}">Դուրս գալ</a>
+    {% else %}
+        <a href="{{ url_for('login') }}">Մտնել</a>
+    {% endif %}
+</div>
+<h2>Թարգմանվում է <a href="https://www.wikidata.org/wiki/{{ Q }}" target="_blank">{{ Q }}</a> տարրը</h2>
+{% if Q and labels %}
+    <form action="/" method="post" id="form">
+        <div class="form-group">
+            <label for="hylabel">Այս տարրի հայերեն պիտակը</label>
+        </div>
+        <div class="form-group">
+            <input type="hidden" value="{{ Q }}" name="Q" />
+            <input type="text" name="hylabel" id="hylabel">
+        </div>
+        <div class="form-group">
+            <button type="submit" name="action" value="save" id="save">Պահպանել</button>
+            <button type="submit" name="action" value="skip" id="skip">Չգիտեմ</button>
+        </div>
+    </form>
+    <div class="table-wrapper">
+        <table class="fl-table">
+            <thead>
+            <tr>
+                <th>Լեզու</th>
+                <th>Պիտակ</th>
+                <th>Նկարագրություն</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for label in labels %}
+                <tr>
+                {% if label.language in ['en', 'ru', 'de', 'hyw', 'es', 'fr', 'tr', 'uk'] %}
+                    {% if 'url' in label %}
+                        <td><strong><big><a href="{{ label.url }}" target="_blank">{{ label.language }}</a></big></strong></td>
+                    {% else %}
+                        <td><strong><big>{{ label.language }}</big></strong></td>
+                    {% endif %}
+                    <td><strong><big>{{ label.value }}</big></strong></td>
+                    <td><strong><big>{{ label.description }}</big></strong></td>
+                {% else %}
+                    {% if 'url' in label %}
+                        <td><a href="{{ label.url }}">{{ label.language }}</a></td>
+                    {% else %}
+                        <td>{{ label.language }}</td>
+                    {% endif %}
+                    <td>{{ label.value }}</td>
+                    <td>{{ label.description }}</td>
+                {% endif %}
+                </tr>
+            {% endfor %}
+            <tbody>
+              <tfoot>
+      </tfoot>
+        </table>
+
+    </div>
+{% else %}
+    <h3>Խնդրում ենք մուտք գործել գործիքից օգվելու համար</h3>
+{% endif %}
+</body>
+</html>
