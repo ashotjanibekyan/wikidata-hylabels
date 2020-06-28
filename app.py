@@ -7,29 +7,32 @@ app = flask.Flask(__name__)
 __dir__ = os.path.dirname(__file__)
 app.config.update(yaml.safe_load(open(os.path.join(__dir__, 'config.yaml'))))
 
+with open('Qs.txt', 'r') as file:
+    Qs = [line.replace('\n', '') for line in file.readlines()]
+    random.shuffle(Qs)
 
-def get_labels(rec=5):
-    if rec < 0:
+
+def get_labels(rec=10):
+    if rec < 0 or not Qs:
         return None, None
-    with open('Qs.txt', 'r') as file:
-        Q = random.choice([line.replace('\n', '') for line in file.readlines()])
-        dict = get_entity_dict_from_api(Q)
-        labels = []
-        if 'labels' in dict:
-            if 'hy' in dict['labels']:
-                return get_labels(rec - 1)
-            for lang in dict['labels']:
-                temp = dict['labels'][lang]
-                if 'descriptions' in dict and lang in dict['descriptions']:
-                    temp['description'] = dict['descriptions'][lang]['value']
-                if 'sitelinks' in dict and lang + 'wiki' in dict['sitelinks']:
-                    temp['url'] = dict['sitelinks'][lang + 'wiki']['url']
-                labels.append(dict['labels'][lang])
-        return Q, labels
+    print(len(Qs))
+    Q = Qs.pop()
+    dict = get_entity_dict_from_api(Q)
+    labels = []
+    if 'labels' in dict:
+        if 'hy' in dict['labels']:
+            return get_labels(rec - 1)
+        for lang in dict['labels']:
+            temp = dict['labels'][lang]
+            if 'descriptions' in dict and lang in dict['descriptions']:
+                temp['description'] = dict['descriptions'][lang]['value']
+            if 'sitelinks' in dict and lang + 'wiki' in dict['sitelinks']:
+                temp['url'] = dict['sitelinks'][lang + 'wiki']['url']
+            labels.append(dict['labels'][lang])
+    return Q, labels
 
 
 def save_label(Q, label):
-    print(Q, label)
     auth1 = OAuth1(app.config['CONSUMER_KEY'],
                    client_secret=app.config['CONSUMER_SECRET'],
                    resource_owner_key=flask.session['access_token']['key'],
