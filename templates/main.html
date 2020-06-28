@@ -40,8 +40,8 @@
             </thead>
             <tbody>
             {% for label in labels %}
-                <tr>
-                    {% if label.language in ['en', 'ru', 'de', 'hyw', 'es', 'fr', 'tr', 'uk'] %}
+                {% if label.language in ['en', 'ru', 'de', 'hyw', 'es', 'fr', 'tr', 'uk'] %}
+                    <tr>
                         {% if 'url' in label %}
                             <td><strong><big><a href="{{ label.url }}"
                                                 target="_blank">{{ label.language }}</a></big></strong></td>
@@ -50,12 +50,12 @@
                         {% endif %}
                         <td><strong><big>{{ label.value }}</big></strong></td>
                         <td><strong><big>{{ label.description }}</big></strong></td>
-                    {% endif %}
-                </tr>
+                    </tr>
+                {% endif %}
             {% endfor %}
             {% for label in labels %}
-                <tr>
-                    {% if label.language not in ['en', 'ru', 'de', 'hyw', 'es', 'fr', 'tr', 'uk'] %}
+                {% if label.language not in ['en', 'ru', 'de', 'hyw', 'es', 'fr', 'tr', 'uk'] %}
+                    <tr>
                         {% if 'url' in label %}
                             <td><a href="{{ label.url }}" target="_blank">{{ label.language }}</a></td>
                         {% else %}
@@ -63,8 +63,8 @@
                         {% endif %}
                         <td>{{ label.value }}</td>
                         <td>{{ label.description }}</td>
-                    {% endif %}
-                </tr>
+                    </tr>
+                {% endif %}
             {% endfor %}
             <tbody>
             <tfoot>
