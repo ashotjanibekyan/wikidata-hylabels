@@ -15,7 +15,6 @@ with open('Qs.txt', 'r') as file:
 def get_labels(rec=10):
     if rec < 0 or not Qs:
         return None, None
-    print(len(Qs))
     Q = Qs.pop()
     dict = get_entity_dict_from_api(Q)
     labels = []
