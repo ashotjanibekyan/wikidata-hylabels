@@ -2,6 +2,7 @@ import random, yaml, os, flask, mwoauth, requests
 
 from qwikidata.linked_data_interface import get_entity_dict_from_api
 from requests_oauthlib import OAuth1
+from collections import deque
 
 app = flask.Flask(__name__)
 __dir__ = os.path.dirname(__file__)
@@ -60,18 +61,28 @@ def save_label(Q, label):
 
 @app.route('/', methods=['POST', 'GET'])
 def index():
+    def divide_labels(l):
+        loved_langs = ['ru', 'en', 'fr', 'es', 'de', 'pl', 'it', 'hyw']
+        d = deque()
+        for label in l:
+            print(label)
+            if label['language'] in loved_langs:
+                label['big'] = True
+                d.appendleft(label)
+            else:
+                d.append(label)
+        return list(d)
     username = flask.session.get('username', None)
     if username:
 
         if flask.request.method == 'POST':
-            print(flask.request.form)
             if flask.request.form['action'] == 'save' and flask.request.form['hylabel']:
                 save_label(flask.request.form['Q'], flask.request.form['hylabel'])
             Q, labels = get_labels()
             if not Q:
                 return flask.render_template('error.html',
                                              error={'msg': 'Չթարգմանված տարր չի գտնվել։ Խնդրում ենք փորձել ավելի ուշ։'})
-            return flask.render_template('main.html', labels=labels, Q=Q, username=username)
+            return flask.render_template('main.html', labels=divide_labels(labels), Q=Q, username=username)
 
         if flask.request.method == 'GET':
             Q, labels = get_labels()
@@ -79,7 +90,7 @@ def index():
                 return flask.render_template('error.html',
                                              error={'msg': 'Չթարգմանված տարր չի գտնվել։ Խնդրում ենք փորձել ավելի ուշ։'})
             else:
-                return flask.render_template('main.html', labels=labels, Q=Q, username=username)
+                return flask.render_template('main.html', labels=divide_labels(labels), Q=Q, username=username)
 
     return flask.render_template('main.html')
 

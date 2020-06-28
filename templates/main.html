@@ -40,8 +40,8 @@
             </thead>
             <tbody>
             {% for label in labels %}
-                {% if label.language in ['en', 'ru', 'de', 'hyw', 'es', 'fr', 'tr', 'uk'] %}
-                    <tr>
+                <tr>
+                    {% if 'big' in label %}
                         {% if 'url' in label %}
                             <td><strong><big><a href="{{ label.url }}"
                                                 target="_blank">{{ label.language }}</a></big></strong></td>
@@ -50,12 +50,7 @@
                         {% endif %}
                         <td><strong><big>{{ label.value }}</big></strong></td>
                         <td><strong><big>{{ label.description }}</big></strong></td>
-                    </tr>
-                {% endif %}
-            {% endfor %}
-            {% for label in labels %}
-                {% if label.language not in ['en', 'ru', 'de', 'hyw', 'es', 'fr', 'tr', 'uk'] %}
-                    <tr>
+                    {% else %}
                         {% if 'url' in label %}
                             <td><a href="{{ label.url }}" target="_blank">{{ label.language }}</a></td>
                         {% else %}
@@ -63,14 +58,13 @@
                         {% endif %}
                         <td>{{ label.value }}</td>
                         <td>{{ label.description }}</td>
-                    </tr>
-                {% endif %}
+                    {% endif %}
+                </tr>
             {% endfor %}
             <tbody>
             <tfoot>
             </tfoot>
         </table>
-
     </div>
 {% else %}
     <h3>Խնդրում ենք մուտք գործել գործիքից օգվելու համար</h3>
