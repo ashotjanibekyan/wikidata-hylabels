@@ -1,8 +1,13 @@
-import random, yaml, os, flask, mwoauth, requests
+import flask
+import mwoauth
+import os
+import random
+import requests
+import yaml
+from collections import deque
 
 from qwikidata.linked_data_interface import get_entity_dict_from_api
 from requests_oauthlib import OAuth1
-from collections import deque
 
 app = flask.Flask(__name__)
 __dir__ = os.path.dirname(__file__)
@@ -11,6 +16,7 @@ app.config.update(yaml.safe_load(open(os.path.join(__dir__, 'config.yaml'))))
 with open('Qs.txt', 'r') as file:
     Qs = [line.replace('\n', '') for line in file.readlines()]
     random.shuffle(Qs)
+    Qs = list(set(Qs))
 
 
 def get_labels(rec=10):
@@ -33,6 +39,9 @@ def get_labels(rec=10):
 
 
 def save_label(Q, label):
+    dict = get_entity_dict_from_api(Q)
+    if 'labels' in dict and 'hy' in dict['labels']:
+        return None
     auth1 = OAuth1(app.config['CONSUMER_KEY'],
                    client_secret=app.config['CONSUMER_SECRET'],
                    resource_owner_key=flask.session['access_token']['key'],
@@ -65,7 +74,6 @@ def index():
         loved_langs = ['ru', 'en', 'fr', 'es', 'de', 'pl', 'it', 'hyw']
         d = deque()
         for label in l:
-            print(label)
             if label['language'] in loved_langs:
                 label['big'] = True
                 d.appendleft(label)
