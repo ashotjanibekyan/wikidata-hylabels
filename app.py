@@ -15,7 +15,7 @@ app.config.update(yaml.safe_load(open(os.path.join(__dir__, 'config.yaml'))))
 
 with open('Qs.txt', 'r') as file:
     Qs = [line.replace('\n', '') for line in file.readlines()]
-    random.shuffle(Qs)
+    #random.shuffle(Qs)
     Qs = list(set(Qs))
 
 
