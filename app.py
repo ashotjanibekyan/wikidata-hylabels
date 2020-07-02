@@ -1,3 +1,5 @@
+import datetime
+
 import flask
 import mwoauth
 import os
@@ -8,26 +10,48 @@ from collections import deque
 
 from qwikidata.linked_data_interface import get_entity_dict_from_api
 from requests_oauthlib import OAuth1
+from flask_sqlalchemy import SQLAlchemy
 
 app = flask.Flask(__name__)
 __dir__ = os.path.dirname(__file__)
 app.config.update(yaml.safe_load(open(os.path.join(__dir__, 'config.yaml'))))
-
-with open('Qs.txt', 'r') as file:
-    Qs = [line.replace('\n', '') for line in file.readlines()]
-    #random.shuffle(Qs)
-    Qs = list(set(Qs))
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db'
+db = SQLAlchemy(app)
 
 
-def get_labels(rec=10):
-    if rec < 0 or not Qs:
+class WikiDataItems(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    q = db.Column(db.String(20), nullable=False, unique=True)
+
+    def __repr__(self):
+        return self.q
+
+
+class Done(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    q = db.Column(db.String(20), nullable=False)
+    username = db.Column(db.String(100), nullable=False)
+    add_time = db.Column(db.DateTime, nullable=False,
+                         default=datetime.datetime.utcnow)
+    action = db.Column(db.Integer, nullable=False)
+
+    def __repr__(self):
+        return 'Username: ' + str(self.username) + ', q: ' + str(self.q) + ', add_time: ' + str(
+            self.add_time) + ', action: ' + str(self.action) + ', id: ' + str(self.id)
+
+
+def get_labels(username, rec=10):
+    if rec < 0:
         return None, None
-    Q = Qs.pop()
+    Q = str(random.choice(WikiDataItems.query.all()))
+    if Done.query.filter_by(username=username, q=Q).all():
+        print(Done.query.filter_by(username=username, q=Q).all())
+        return get_labels(username, rec - 1)
     dict = get_entity_dict_from_api(Q)
     labels = []
     if 'labels' in dict:
         if 'hy' in dict['labels']:
-            return get_labels(rec - 1)
+            return get_labels(username, rec - 1)
         for lang in dict['labels']:
             temp = dict['labels'][lang]
             if 'descriptions' in dict and lang in dict['descriptions']:
@@ -41,6 +65,8 @@ def get_labels(rec=10):
 def save_label(Q, label):
     dict = get_entity_dict_from_api(Q)
     if 'labels' in dict and 'hy' in dict['labels']:
+        WikiDataItems.query.filter_by(q=Q).delete()
+        db.session.commit()
         return None
     auth1 = OAuth1(app.config['CONSUMER_KEY'],
                    client_secret=app.config['CONSUMER_SECRET'],
@@ -65,6 +91,9 @@ def save_label(Q, label):
         },
         auth=auth1
     )
+    if response and 'success' in response.json() and response.json()['success']:
+        WikiDataItems.query.filter_by(q=Q).delete()
+        db.session.commit()
     return csrftoken, response
 
 
@@ -80,20 +109,29 @@ def index():
             else:
                 d.append(label)
         return list(d)
+
     username = flask.session.get('username', None)
     if username:
-
         if flask.request.method == 'POST':
             if flask.request.form['action'] == 'save' and flask.request.form['hylabel']:
                 save_label(flask.request.form['Q'], flask.request.form['hylabel'])
-            Q, labels = get_labels()
+                action = Done(username=username, q=flask.request.form['Q'], action=1)
+                db.session.add(action)
+                db.session.commit()
+
+            if flask.request.form['action'] == 'skip':
+                action = Done(username=username, q=flask.request.form['Q'], action=0)
+                db.session.add(action)
+                db.session.commit()
+
+            Q, labels = get_labels(username)
             if not Q:
                 return flask.render_template('error.html',
                                              error={'msg': 'Չթարգմանված տարր չի գտնվել։ Խնդրում ենք փորձել ավելի ուշ։'})
             return flask.render_template('main.html', labels=divide_labels(labels), Q=Q, username=username)
 
         if flask.request.method == 'GET':
-            Q, labels = get_labels()
+            Q, labels = get_labels(username)
             if not Q:
                 return flask.render_template('error.html',
                                              error={'msg': 'Չթարգմանված տարր չի գտնվել։ Խնդրում ենք փորձել ավելի ուշ։'})
