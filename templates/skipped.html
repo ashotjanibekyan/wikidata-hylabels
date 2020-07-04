@@ -1,0 +1,11 @@
+{% extends "main.html" %}
+
+{% block body %}
+    {% if user_skipped %}
+        <ol>
+            {% for q in user_skipped %}
+                <li><a href="https://www.wikidata.org/wiki/{{ q['q'] }}" target="_blank">{{ q['q'] }}</a></li>
+            {% endfor %}
+        </ol>
+    {% endif %}
+{% endblock %}
