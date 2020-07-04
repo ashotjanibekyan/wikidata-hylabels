@@ -141,6 +141,25 @@ def index():
     return flask.render_template('main.html')
 
 
+@app.route('/skipped', methods=['POST', 'GET'])
+def skipped():
+    username = flask.session.get('username', None)
+    if username:
+        user_skipped = Done.query.filter_by(username=username, action=0).all()
+        return flask.render_template('skipped.html', username=username, user_skipped=user_skipped)
+    return flask.render_template('main.html')
+
+
+@app.route('/done', methods=['POST', 'GET'])
+def done():
+    username = flask.session.get('username', None)
+    if username:
+        user_done = Done.query.filter_by(username=username, action=1).all()
+        print(user_done)
+        return flask.render_template('done.html', username=username, user_done=user_done)
+    return flask.render_template('main.html')
+
+
 @app.route('/login')
 def login():
     """Initiate an OAuth login.

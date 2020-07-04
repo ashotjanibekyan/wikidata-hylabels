@@ -7,15 +7,19 @@
 <body>
 <div class="topnav">
     {% if username %}
+        <a href="/">hylabels</a>
         <a href="https://www.wikidata.org/wiki/User:{{ username }}" target="_blank">{{ username }}</a>
         <a href="https://www.wikidata.org/wiki/Special:Contributions/{{ username }}" target="_blank">Ներդրումներ</a>
         <a href="https://www.wikidata.org/wiki/Special:RecentChanges?tagfilter=OAuth+CID%3A+1852&limit=500&days=30" target="_blank">hylabels-ի վերջին փոփոխություններ</a>
+        <a href="{{ url_for('done') }}">Արված</a>
+        <a href="{{ url_for('skipped') }}">Չիմացածներ</a>
         <a href="{{ url_for('logout') }}">Դուրս գալ</a>
     {% else %}
         <a href="https://www.wikidata.org/wiki/Special:RecentChanges?tagfilter=OAuth+CID%3A+1852&limit=500&days=30" target="_blank">hylabels-ի վերջին փոփոխություններ</a>
         <a href="{{ url_for('login') }}">Մտնել</a>
     {% endif %}
 </div>
+{% block body %}
 {% if Q and labels %}
     <h2>Թարգմանվում է <a href="https://www.wikidata.org/wiki/{{ Q }}" target="_blank">{{ Q }}</a> տարրը</h2>
     <form action="/" method="post" id="form">
@@ -71,5 +75,6 @@
 {% else %}
     <h3>Խնդրում ենք մուտք գործել գործիքից օգվելու համար</h3>
 {% endif %}
+{% endblock %}
 </body>
 </html>
