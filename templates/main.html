@@ -1,80 +1,134 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="hy">
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}">
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
+          integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+
+    <link rel="icon" href="https://upload.wikimedia.org/wikipedia/commons/thumb/3/37/%D4%B4_%D5%B6%D5%B8%D5%BF%D6%80%D5%A3%D5%AB%D6%80.svg/47px-%D4%B4_%D5%B6%D5%B8%D5%BF%D6%80%D5%A3%D5%AB%D6%80.svg.png">
+    <title>Լրացնել Հայերեն Վիքիպեդիայում օգտագործվող տարրերի պիտակները</title>
 </head>
 <body>
-<div class="topnav">
-    {% if username %}
-        <a href="/">hylabels</a>
-        <a href="https://www.wikidata.org/wiki/User:{{ username }}" target="_blank">{{ username }}</a>
-        <a href="https://www.wikidata.org/wiki/Special:Contributions/{{ username }}" target="_blank">Ներդրումներ</a>
-        <a href="https://www.wikidata.org/wiki/Special:RecentChanges?tagfilter=OAuth+CID%3A+1852&limit=500&days=30" target="_blank">hylabels-ի վերջին փոփոխություններ</a>
-        <a href="{{ url_for('done') }}">Արվածներ</a>
-        <a href="{{ url_for('skipped') }}">Չիմացածներ</a>
-        <a href="{{ url_for('logout') }}">Դուրս գալ</a>
-    {% else %}
-        <a href="https://www.wikidata.org/wiki/Special:RecentChanges?tagfilter=OAuth+CID%3A+1852&limit=500&days=30" target="_blank">hylabels-ի վերջին փոփոխություններ</a>
-        <a href="{{ url_for('login') }}">Մտնել</a>
-    {% endif %}
-</div>
-{% block body %}
-{% if Q and labels %}
-    <h2>Թարգմանվում է <a href="https://www.wikidata.org/wiki/{{ Q }}" target="_blank">{{ Q }}</a> տարրը</h2>
-    <form action="/" method="post" id="form">
-        <div class="form-group">
-            <label for="hylabel">Այս տարրի հայերեն պիտակը</label>
-        </div>
-        <div class="form-group">
-            <input type="hidden" value="{{ Q }}" name="Q"/>
-            <input type="text" name="hylabel" id="hylabel">
-        </div>
-        <div class="form-group">
-            <button type="submit" name="action" value="save" id="save">Պահպանել</button>
-            <button type="submit" name="action" value="skip" id="skip">Չգիտեմ</button>
-        </div>
-    </form>
-    <div class="table-wrapper">
-        <table class="fl-table">
-            <thead>
-            <tr>
-                <th>Լեզու</th>
-                <th>Պիտակ</th>
-                <th>Նկարագրություն</th>
-            </tr>
-            </thead>
-            <tbody>
-            {% for label in labels %}
-                <tr>
-                    {% if 'big' in label %}
-                        {% if 'url' in label %}
-                            <td><strong><big><a href="{{ label.url }}"
-                                                target="_blank">{{ label.language }}</a></big></strong></td>
-                        {% else %}
-                            <td><strong><big>{{ label.language }}</big></strong></td>
-                        {% endif %}
-                        <td><strong><big>{{ label.value }}</big></strong></td>
-                        <td><strong><big>{{ label.description }}</big></strong></td>
+<div class="container">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="collapse navbar-collapse" id="navbarText">
+            <ul class="navbar-nav mr-auto">
+                {% block navbar %}
+                    {% if username %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="/">hylabels</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="https://www.wikidata.org/wiki/User:{{ username }}"
+                               target="_blank">{{ username }}</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link"
+                               href="https://www.wikidata.org/wiki/Special:Contributions/{{ username }}"
+                               target="_blank">Ներդրումներ</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link"
+                               href="https://www.wikidata.org/wiki/Special:RecentChanges?tagfilter=OAuth+CID%3A+1852&limit=500&days=30"
+                               target="_blank">hylabels-ի վերջին փոփոխություններ</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('done') }}">Արվածներ</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('skipped') }}">Չիմացածներ</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('logout') }}">Դուրս գալ</a>
+                        </li>
                     {% else %}
-                        {% if 'url' in label %}
-                            <td><a href="{{ label.url }}" target="_blank">{{ label.language }}</a></td>
-                        {% else %}
-                            <td>{{ label.language }}</td>
-                        {% endif %}
-                        <td>{{ label.value }}</td>
-                        <td>{{ label.description }}</td>
+                        <li class="nav-item">
+                            <a class="nav-link"
+                               href="https://www.wikidata.org/wiki/Special:RecentChanges?tagfilter=OAuth+CID%3A+1852&limit=500&days=30"
+                               target="_blank">hylabels-ի վերջին փոփոխություններ</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('login') }}">Մտնել</a>
+                        </li>
                     {% endif %}
+                {% endblock %}
+            </ul>
+        </div>
+    </nav>
+    {% block body %}
+        {% if Q and labels %}
+            <h3 class="text-center">Խմբագրվում է <a href="https://www.wikidata.org/wiki/{{ Q }}"
+                                                     target="_blank">{{ Q }}</a> տարրը</h3>
+            <form action="/" method="post" id="form">
+                <div class="form-group">
+                    <label for="hylabel">Այս տարրի հայերեն պիտակը</label>
+                    <input type="hidden" value="{{ Q }}" name="Q"/>
+                    <input autocomplete="off" type="text" class="form-control" id="hylabel" name="hylabel" placeholder="Հայերեն պիտակ">
+                </div>
+                <div class="form-group">
+                    <button class="btn btn-primary" type="submit" name="action" value="save" id="save">Պահպանել</button>
+                    <button class="btn btn-primary" type="submit" name="action" value="skip" id="skip">Չգիտեմ</button>
+                </div>
+            </form>
+            <table class="table table-hover">
+                <thead>
+                <tr>
+                    <th scope="col">Լեզու</th>
+                    <th scope="col">Պիտակ</th>
+                    <th scope="col">Նկարագրություն</th>
                 </tr>
-            {% endfor %}
-            <tbody>
-            <tfoot>
-            </tfoot>
-        </table>
-    </div>
-{% else %}
-    <h3>Խնդրում ենք մուտք գործել գործիքից օգվելու համար</h3>
-{% endif %}
-{% endblock %}
+                </thead>
+                <tbody>
+                {% for label in labels %}
+                    <tr>
+                        {% if 'big' in label %}
+                            {% if 'url' in label %}
+                                <td><strong><a href="{{ label.url }}"
+                                                    target="_blank">{{ label.language }}</a></strong></td>
+                            {% else %}
+                                <td><strong>{{ label.language }}</strong></td>
+                            {% endif %}
+                            <td><strong>{{ label.value }}</strong></td>
+                            <td><strong>{{ label.description }}</strong></td>
+                        {% else %}
+                            {% if 'url' in label %}
+                                <td><a href="{{ label.url }}" target="_blank">{{ label.language }}</a></td>
+                            {% else %}
+                                <td>{{ label.language }}</td>
+                            {% endif %}
+                            <td>{{ label.value }}</td>
+                            <td>{{ label.description }}</td>
+                        {% endif %}
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <h3>Խնդրում ենք մուտք գործել գործիքից օգվելու համար</h3>
+        {% endif %}
+    {% endblock %}
+    <footer class="footer">
+        <p class="text-sm-center"><small>Թերությունների կամ առաջարկների դեպքում գրել <a
+                href="https://hy.wikipedia.org/wiki/%D5%84%D5%A1%D5%BD%D5%B6%D5%A1%D5%AF%D6%81%D5%AB_%D6%84%D5%B6%D5%B6%D5%A1%D6%80%D5%AF%D5%B8%D6%82%D5%B4:%D4%B1%D5%B7%D5%B8%D5%BF%D5%8F%D5%86%D5%82">ԱշոտՏՆՂ</a>
+            մասնակցին</small></p>
+    </footer>
+</body>
+
+
+<!-- Optional JavaScript -->
+<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"
+        integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+        integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+        crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"
+        integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI"
+        crossorigin="anonymous"></script>
 </body>
 </html>
+

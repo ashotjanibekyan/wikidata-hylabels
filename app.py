@@ -97,6 +97,12 @@ def save_label(Q, label):
     return csrftoken, response
 
 
+@app.errorhandler(Exception)
+def handle_error(error):
+    print(error)
+    return flask.render_template('error.html', error=error)
+
+
 @app.route('/', methods=['POST', 'GET'])
 def index():
     def divide_labels(l):

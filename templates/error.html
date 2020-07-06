@@ -1,12 +1,11 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}">
-</head>
-<body>
+{% extends "main.html" %}
 
-<h2>{{ error.msg }} :(</h2>
-
-</body>
-</html>
+{% block body %}
+    {% if error %}
+        {% if error.msg %}
+            <h2>{{ error.msg }} :(</h2>
+        {% else %}
+            <h2>{{ error }} :(</h2>
+        {% endif %}
+    {% endif %}
+{% endblock %}
