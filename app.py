@@ -8,6 +8,7 @@ import requests
 import yaml
 from collections import deque
 
+from flask import jsonify
 from qwikidata.linked_data_interface import get_entity_dict_from_api
 from requests_oauthlib import OAuth1
 from flask_sqlalchemy import SQLAlchemy
@@ -45,7 +46,6 @@ def get_labels(username, rec=10):
         return None, None
     Q = str(random.choice(WikiDataItems.query.all()))
     if Done.query.filter_by(username=username, q=Q).all():
-        print(Done.query.filter_by(username=username, q=Q).all())
         return get_labels(username, rec - 1)
     dict = get_entity_dict_from_api(Q)
     labels = []
@@ -99,12 +99,13 @@ def save_label(Q, label):
 
 @app.errorhandler(Exception)
 def handle_error(error):
-    print(error)
     return flask.render_template('error.html', error=error)
 
 
 @app.route('/', methods=['POST', 'GET'])
 def index():
+    print(flask.request.remote_addr)
+
     def divide_labels(l):
         loved_langs = ['ru', 'en', 'fr', 'es', 'de', 'pl', 'it', 'hyw']
         d = deque()
@@ -161,7 +162,6 @@ def done():
     username = flask.session.get('username', None)
     if username:
         user_done = Done.query.filter_by(username=username, action=1).all()
-        print(user_done)
         return flask.render_template('done.html', username=username, user_done=user_done)
     return flask.render_template('main.html')
 
