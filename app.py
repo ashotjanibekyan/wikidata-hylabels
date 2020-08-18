@@ -49,9 +49,12 @@ def get_labels(username, rec=10):
         return get_labels(username, rec - 1)
     dict = get_entity_dict_from_api(Q)
     labels = []
+    hydesc = 'հայերեն նկարագրություն չկա'
     if 'labels' in dict:
         if 'hy' in dict['labels']:
             return get_labels(username, rec - 1)
+        if 'hy' in dict['descriptions']:
+            hydesc = dict['descriptions']['hy']['value']
         for lang in dict['labels']:
             temp = dict['labels'][lang]
             if 'descriptions' in dict and lang in dict['descriptions']:
@@ -59,15 +62,10 @@ def get_labels(username, rec=10):
             if 'sitelinks' in dict and lang + 'wiki' in dict['sitelinks']:
                 temp['url'] = dict['sitelinks'][lang + 'wiki']['url']
             labels.append(dict['labels'][lang])
-    return Q, labels
+    return Q, labels, hydesc
 
 
-def save_label(Q, label):
-    dict = get_entity_dict_from_api(Q)
-    if 'labels' in dict and 'hy' in dict['labels']:
-        WikiDataItems.query.filter_by(q=Q).delete()
-        db.session.commit()
-        return None
+def get_csrf_token():
     auth1 = OAuth1(app.config['CONSUMER_KEY'],
                    client_secret=app.config['CONSUMER_SECRET'],
                    resource_owner_key=flask.session['access_token']['key'],
@@ -78,12 +76,39 @@ def save_label(Q, label):
         "meta": "tokens"
     },
                          auth=auth1)
-    csrftoken = token.json()['query']['tokens']['csrftoken']
+    csrf_token = token.json()['query']['tokens']['csrftoken']
+    return auth1, csrf_token
+
+
+def save_description(Q, desc):
+    auth1, csrf_token = get_csrf_token()
+    response = requests.post(
+        "https://www.wikidata.org/w/api.php",
+        data={
+            "action": "wbsetdescription",
+            "token": csrf_token,
+            "format": "json",
+            "id": Q,
+            "language": "hy",
+            "value": desc
+        },
+        auth=auth1
+    )
+    return csrf_token, response
+
+
+def save_label(Q, label):
+    data = get_entity_dict_from_api(Q)
+    if 'labels' in data and 'hy' in data['labels']:
+        WikiDataItems.query.filter_by(q=Q).delete()
+        db.session.commit()
+        return None
+    auth1, csrf_token = get_csrf_token()
     response = requests.post(
         "https://www.wikidata.org/w/api.php",
         data={
             "action": "wbsetlabel",
-            "token": csrftoken,
+            "token": csrf_token,
             "format": "json",
             "id": Q,
             "language": "hy",
@@ -94,7 +119,7 @@ def save_label(Q, label):
     if response and 'success' in response.json() and response.json()['success']:
         WikiDataItems.query.filter_by(q=Q).delete()
         db.session.commit()
-    return csrftoken, response
+    return csrf_token, response
 
 
 @app.errorhandler(Exception)
@@ -104,8 +129,6 @@ def handle_error(error):
 
 @app.route('/', methods=['POST', 'GET'])
 def index():
-    print(flask.request.remote_addr)
-
     def divide_labels(l):
         loved_langs = ['ru', 'en', 'fr', 'es', 'de', 'pl', 'it', 'hyw']
         d = deque()
@@ -120,30 +143,36 @@ def index():
     username = flask.session.get('username', None)
     if username:
         if flask.request.method == 'POST':
+            print(flask.request.form)
             if flask.request.form['action'] == 'save' and flask.request.form['hylabel']:
                 save_label(flask.request.form['Q'], flask.request.form['hylabel'])
                 action = Done(username=username, q=flask.request.form['Q'], action=1)
                 db.session.add(action)
                 db.session.commit()
 
+            if flask.request.form['action'] == 'save' and flask.request.form['hydescription']:
+                save_description(flask.request.form['Q'], flask.request.form['hydescription'])
+
             if flask.request.form['action'] == 'skip':
                 action = Done(username=username, q=flask.request.form['Q'], action=0)
                 db.session.add(action)
                 db.session.commit()
 
-            Q, labels = get_labels(username)
+            Q, labels, hydesc = get_labels(username)
             if not Q:
                 return flask.render_template('error.html',
                                              error={'msg': 'Չթարգմանված տարր չի գտնվել։ Խնդրում ենք փորձել ավելի ուշ։'})
-            return flask.render_template('main.html', labels=divide_labels(labels), Q=Q, username=username)
+            return flask.render_template('main.html', labels=divide_labels(labels), Q=Q, hydesc=hydesc,
+                                         username=username)
 
         if flask.request.method == 'GET':
-            Q, labels = get_labels(username)
+            Q, labels, hydesc = get_labels(username)
             if not Q:
                 return flask.render_template('error.html',
                                              error={'msg': 'Չթարգմանված տարր չի գտնվել։ Խնդրում ենք փորձել ավելի ուշ։'})
             else:
-                return flask.render_template('main.html', labels=divide_labels(labels), Q=Q, username=username)
+                return flask.render_template('main.html', labels=divide_labels(labels), Q=Q, hydesc=hydesc,
+                                             username=username)
 
     return flask.render_template('main.html')
 
