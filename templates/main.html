@@ -124,7 +124,7 @@
     var values = document.getElementsByClassName( 'value' );
     var textInput = document.getElementById( 'hylabel' );
     for (var i = 0; i < values.length; i++) {
-        values[i].addEventListener( 'click',  function () {
+        values[i].addEventListener( 'dblclick',  function () {
             textInput.value = this.innerText;
         } )
     }

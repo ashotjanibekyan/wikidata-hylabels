@@ -18,6 +18,7 @@ __dir__ = os.path.dirname(__file__)
 app.config.update(yaml.safe_load(open(os.path.join(__dir__, 'config.yaml'))))
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db'
 db = SQLAlchemy(app)
+API_URL = 'https://hy.wikipedia.org/w/api.php'
 
 
 class WikiDataItems(db.Model):
@@ -39,6 +40,39 @@ class Done(db.Model):
     def __repr__(self):
         return 'Username: ' + str(self.username) + ', q: ' + str(self.q) + ', add_time: ' + str(
             self.add_time) + ', action: ' + str(self.action) + ', id: ' + str(self.id)
+
+
+def first_edit_date(user):
+    r = requests.get(API_URL, params={
+        "action": "query",
+        "format": "json",
+        "list": "usercontribs",
+        "uclimit": "1",
+        "ucuser": user,
+        "ucdir": "newer",
+        "ucprop": "timestamp"
+    })
+    jsn = r.json()
+    if 'query' in jsn and 'usercontribs' in jsn['query'] and jsn['query']['usercontribs']:
+        return datetime.datetime.strptime(jsn['query']['usercontribs'][0]['timestamp'], "%Y-%m-%dT%H:%M:%SZ")
+    return None
+
+
+def registration_date(user):
+    r = requests.get(API_URL, params={
+        "action": "query",
+        "format": "json",
+        "list": "users",
+        "usprop": "registration",
+        "ususers": user
+    })
+    jsn = r.json()
+    if 'query' in jsn and 'users' in jsn['query'] and 'registration' in jsn['query']['users'][0]:
+        if jsn['query']['users'][0]['registration']:
+            return datetime.datetime.strptime(jsn['query']['users'][0]['registration'], "%Y-%m-%dT%H:%M:%SZ")
+        else:
+            return first_edit_date(user)
+    return None
 
 
 def get_labels(username, rec=10):
@@ -242,7 +276,12 @@ def oauth_callback():
             access_token._fields, access_token))
         flask.session['username'] = identity['username']
 
-    return flask.redirect(flask.url_for('index'))
+    regdate = registration_date(flask.session['username'])
+    if regdate:
+        delta = datetime.datetime.now() - regdate
+        if delta.days >= 365:
+            return flask.redirect(flask.url_for('index'))
+    return flask.render_template('error.html', error={'msg': 'Ցավոք դուք չունեք բավարար վիքիստաժ (անհրաժեշտ է մեկ տարի)'})
 
 
 @app.route('/logout')
