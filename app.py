@@ -281,7 +281,13 @@ def oauth_callback():
         delta = datetime.datetime.now() - regdate
         if delta.days >= 365:
             return flask.redirect(flask.url_for('index'))
-    return flask.render_template('error.html', error={'msg': 'Ցավոք դուք չունեք բավարար վիքիստաժ (անհրաժեշտ է մեկ տարի)'})
+        else:
+            return flask.render_template('error.html', error={'msg': 'Ցավոք, Դուք չունեք բավարար վիքիստաժ։ Խնդրում եմ '
+                                                                     'կրկին փորձել ' + str(365 - delta.days) + ' օր '
+                                                                                                               'հետո։'})
+    return flask.render_template('error.html', error={'msg': 'Չստացվեց գտնել Ձեր գրանցման ամսաթիվը։ Խնդրում եմ կրկին '
+                                                             'փորձել կամ դիմել ԱշոտՏՆՂ մասնակցին, եթե խնդիրը '
+                                                             'շարունակվում է։։'})
 
 
 @app.route('/logout')
